@@ -19,10 +19,6 @@ jobs:
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       USE_CCACHE: 1
-      # Optimasi Ccache Tingkat Tinggi
-      CCACHE_COMPILERCHECK: content
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_SLOPPINESS: file_macro,time_macros,include_file_mtime,include_file_ctime,modules
 
     steps:
       - name: Checkout This Repo
@@ -30,10 +26,8 @@ jobs:
 
       - name: Setup Environment Variables
         run: |
-          # Pakai GITHUB_WORKSPACE agar path-nya sinkron di dalam kontainer
           echo "WORKSPACE=$GITHUB_WORKSPACE/build_env" >> $GITHUB_ENV
           echo "CCACHE_DIR=$GITHUB_WORKSPACE/.ccache" >> $GITHUB_ENV
-          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
       - name: Clone ROM and Kernel
         run: |
@@ -61,15 +55,22 @@ jobs:
           Device: RMX2185
           Job: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
+          # Export Ccache Configurations
+          export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache
+          export CCACHE_BASEDIR=$GITHUB_WORKSPACE
+          export CCACHE_COMPILERCHECK=content
+          export CCACHE_NOHASHDIR=true
+          export CCACHE_SLOPPINESS=file_macro,time_macros,include_file_mtime,include_file_ctime,modules
+          export USE_CCACHE=1
+
+          mkdir -p $CCACHE_DIR
+          ccache -M 5G
+          ccache -o compression=true
+
           cd $WORKSPACE/kernel
           export ARCH=arm64 SUBARCH=arm64 HEADER_ARCH=arm64
           export KBUILD_BUILD_USER=nobody KBUILD_BUILD_HOST=android-build
           export PATH="$WORKSPACE/clang/bin:$WORKSPACE/gcc64/bin:$WORKSPACE/gcc32/bin:$PATH"
-          
-          mkdir -p $CCACHE_DIR
-          ccache -M 5G
-          ccache -o compression=true
-          # Jangan ccache -z dulu biar kita lihat total hits-nya bertambah gak
 
           make O=out ARCH=arm64 RMX2185_defconfig
           make O=out -j$(nproc --all) \
