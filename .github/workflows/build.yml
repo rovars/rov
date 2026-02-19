@@ -18,22 +18,23 @@ jobs:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      WORKSPACE: ${{ github.workspace }}/build_env
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
       USE_CCACHE: 1
+      # Optimasi Ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_COMPILERCHECK: content
 
     steps:
       - name: Checkout This Repo
         uses: actions/checkout@v4
 
-      - name: Setup Environment Variables
-        run: |
-          echo "WORKSPACE=$GITHUB_WORKSPACE/build_env" >> $GITHUB_ENV
-          echo "CCACHE_DIR=$GITHUB_WORKSPACE/.ccache" >> $GITHUB_ENV
-
       - name: Clone ROM and Kernel
         run: |
-          mkdir -p $WORKSPACE
-          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom $WORKSPACE/rom
-          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
+          mkdir -p build_env
+          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom build_env/rom
+          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 build_env/kernel
 
       - name: Cache Ccache
         uses: actions/cache@v5
@@ -63,7 +64,7 @@ jobs:
           mkdir -p $CCACHE_DIR
           ccache -M 5G
           ccache -o compression=true
-          ccache -s
+          ccache -z # Reset statistik biar kelihatan hasil build ini saja
 
           make O=out ARCH=arm64 RMX2185_defconfig
           make O=out -j$(nproc --all) \
@@ -78,18 +79,15 @@ jobs:
               exit 1
           fi
           echo "Build Successfull" >> build.txt
-          ccache -s
+          ccache -s # Cek statistik hits/misses di log
 
       - name: Packaging Result
         run: |
           cd $WORKSPACE/rom/AnyKernel3
           cp $WORKSPACE/kernel/out/arch/arm64/boot/Image.gz-dtb .
-          
           ksu_ver=$(sed -n 's/.*DKSU_VERSION=\([0-9]*\).*/\1/p' $WORKSPACE/kernel/drivers/kernelsu/Makefile | head -n 1)
           [ -z "$ksu_ver" ] && ksu_ver="no-ksu"
-          
           zipn="RMX2185-4.9.190-${ksu_ver}-$(date +%y%m%d).zip"
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
-
           /opt/cirrus_env tg_post "${zipn}"
           /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Build successful log"
