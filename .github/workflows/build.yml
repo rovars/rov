@@ -18,22 +18,25 @@ jobs:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      WORKSPACE: ${{ github.workspace }}/build_env
-      CCACHE_DIR: ${{ github.workspace }}/.ccache
       USE_CCACHE: 1
 
     steps:
       - name: Checkout This Repo
         uses: actions/checkout@v4
 
+      - name: Setup Environment Variables
+        run: |
+          echo "WORKSPACE=$GITHUB_WORKSPACE/build_env" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$GITHUB_WORKSPACE/.ccache" >> $GITHUB_ENV
+
       - name: Clone ROM and Kernel
         run: |
-          mkdir -p build_env
+          mkdir -p $WORKSPACE
           echo "==> Cloning ROM (AnyKernel3)..."
-          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom build_env/rom
+          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom $WORKSPACE/rom
           
           echo "==> Cloning Private Kernel..."
-          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 build_env/kernel
+          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
 
       - name: Cache Ccache
         uses: actions/cache@v5
@@ -94,6 +97,7 @@ jobs:
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
 
           echo "==> Done: Build successful!"
-          /opt/cirrus_env tg_post "${zipn}" "<b>Kernel Build Successful!</b>
+          # Gunakan path lengkap agar tg_post/curl pasti menemukan file
+          /opt/cirrus_env tg_post "$WORKSPACE/rom/AnyKernel3/${zipn}" "<b>Kernel Build Successful!</b>
           File: <code>${zipn}</code>"
           /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Full Build Log"
