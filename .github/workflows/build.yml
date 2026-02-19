@@ -32,10 +32,7 @@ jobs:
       - name: Clone ROM and Kernel
         run: |
           mkdir -p $WORKSPACE
-          echo "==> Cloning ROM (AnyKernel3)..."
           git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom $WORKSPACE/rom
-          
-          echo "==> Cloning Private Kernel..."
           git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
 
       - name: Cache Ccache
@@ -48,11 +45,8 @@ jobs:
 
       - name: Setup Toolchains
         run: |
-          echo "==> Cloning Toolchains..."
           git clone -q --depth=1 -b lineage-17.1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 $WORKSPACE/gcc64
           git clone -q --depth=1 -b lineage-17.1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 $WORKSPACE/gcc32
-          
-          echo "==> Cloning Clang Mirror..."
           git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/clang $WORKSPACE/clang
 
       - name: Build Kernel
@@ -61,7 +55,6 @@ jobs:
           Device: RMX2185
           Job: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          echo "==> Starting Kernel Build..."
           cd $WORKSPACE/kernel
           export ARCH=arm64 SUBARCH=arm64 HEADER_ARCH=arm64
           export KBUILD_BUILD_USER=nobody KBUILD_BUILD_HOST=android-build
@@ -81,7 +74,6 @@ jobs:
               INSTALL_MOD_STRIP=1 2>&1 | tee build.txt
 
           if [ ${PIPESTATUS[0]} -ne 0 ]; then
-              echo "==> Error: Build failed!"
               /opt/cirrus_env tg_post "build.txt" "<b>Kernel Build Failed!</b> Log attached."
               exit 1
           fi
@@ -90,19 +82,14 @@ jobs:
 
       - name: Packaging Result
         run: |
-          echo "==> Packaging Result..."
           cd $WORKSPACE/rom/AnyKernel3
           cp $WORKSPACE/kernel/out/arch/arm64/boot/Image.gz-dtb .
           
-          # Ambil versi KSU jika ada
           ksu_ver=$(sed -n 's/.*DKSU_VERSION=\([0-9]*\).*/\1/p' $WORKSPACE/kernel/drivers/kernelsu/Makefile | head -n 1)
           [ -z "$ksu_ver" ] && ksu_ver="no-ksu"
           
           zipn="RMX2185-4.9.190-${ksu_ver}-$(date +%y%m%d).zip"
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
 
-          echo "==> Done: Build successful!"
-          # Gunakan file di direktori saat ini agar curl tidak error 26
-          /opt/cirrus_env tg_post "${zipn}" "<b>Kernel Build Successful!</b>
-          File: <code>${zipn}</code>"
+          /opt/cirrus_env tg_post "${zipn}"
           /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Build successful log"
