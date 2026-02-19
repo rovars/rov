@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/rovars/docker:cirrus
       options: --user root
@@ -36,12 +36,10 @@ jobs:
           git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 build_env/kernel
 
       - name: Cache Ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ccache
-          # 'key' dibuat unik setiap kali run agar GitHub mau menyimpan (SAVE) data baru di akhir build
           key: kernel-ccache-rmx2185-${{ github.run_id }}
-          # 'restore-keys' akan mencari cache TERBARU yang berawalan sama (RESTORE)
           restore-keys: |
             kernel-ccache-rmx2185-
 
