@@ -52,7 +52,7 @@ jobs:
           echo "==> Cloning Clang Mirror..."
           git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/clang $WORKSPACE/clang
 
-      - name: Build and Package
+      - name: Build Kernel
         run: |
           /opt/cirrus_env tg_post "<b>Kernel Build Started</b>
           Device: RMX2185
@@ -82,7 +82,10 @@ jobs:
               /opt/cirrus_env tg_post "build.txt" "<b>Kernel Build Failed!</b> Log attached."
               exit 1
           fi
+          ccache -s
 
+      - name: Packaging Result
+        run: |
           echo "==> Packaging Result..."
           cd $WORKSPACE/rom/AnyKernel3
           cp $WORKSPACE/kernel/out/arch/arm64/boot/Image.gz-dtb .
@@ -94,5 +97,3 @@ jobs:
           /opt/cirrus_env tg_post "${zipn}" "<b>Kernel Build Successful!</b>
           File: <code>${zipn}</code>"
           /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Full Build Log"
-          
-          ccache -s
