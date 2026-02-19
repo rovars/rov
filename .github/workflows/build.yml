@@ -14,11 +14,14 @@ jobs:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      WORKSPACE: /tmp/build_env
-      CCACHE_DIR: /tmp/.ccache
+      WORKSPACE: ${{ github.workspace }}/build_env
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
       USE_CCACHE: 1
 
     steps:
+      - name: Checkout This Repo
+        uses: actions/checkout@v4
+
       - name: Clone ROM and Kernel
         run: |
           mkdir -p $WORKSPACE
@@ -27,6 +30,14 @@ jobs:
           
           echo "==> Cloning Private Kernel..."
           git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
+
+      - name: Cache Ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-kernel-ccache-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-kernel-ccache-
 
       - name: Setup Toolchains
         run: |
