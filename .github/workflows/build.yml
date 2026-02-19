@@ -24,12 +24,12 @@ jobs:
 
       - name: Clone ROM and Kernel
         run: |
-          mkdir -p $WORKSPACE
+          mkdir -p build_env
           echo "==> Cloning ROM (AnyKernel3)..."
-          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom $WORKSPACE/rom
+          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/rom build_env/rom
           
           echo "==> Cloning Private Kernel..."
-          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
+          git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 build_env/kernel
 
       - name: Cache Ccache
         uses: actions/cache@v4
@@ -45,11 +45,8 @@ jobs:
           git clone -q --depth=1 -b lineage-17.1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 $WORKSPACE/gcc64
           git clone -q --depth=1 -b lineage-17.1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 $WORKSPACE/gcc32
           
-          echo "==> Downloading Clang..."
-          mkdir -p $WORKSPACE/clang
-          wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-10.0.0_r41/clang-r353983c1.tar.gz -O $WORKSPACE/clang.tar.gz
-          tar -xzf $WORKSPACE/clang.tar.gz -C $WORKSPACE/clang
-          rm $WORKSPACE/clang.tar.gz
+          echo "==> Cloning Clang Mirror..."
+          git clone -q --depth=1 https://rovars:${GH_TOKEN}@github.com/rovars/clang $WORKSPACE/clang
 
       - name: Build and Package
         run: |
