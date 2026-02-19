@@ -10,6 +10,10 @@ jobs:
       image: ghcr.io/rovars/docker:cirrus
       options: --user root
 
+    defaults:
+      run:
+        shell: bash
+
     env:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
