@@ -52,18 +52,7 @@ jobs:
 
       - name: Build and Package
         run: |
-          tg_post() {
-              local input="$1"
-              local caption="$2"
-              [[ -z "$TG_TOKEN" || -z "$TG_CHAT_ID" ]] && return 0
-              if [[ -f "$input" ]]; then
-                  curl -s -F document=@"$input" -F chat_id="$TG_CHAT_ID" -F caption="$caption" -F parse_mode=HTML "https://api.telegram.org/bot$TG_TOKEN/sendDocument" > /dev/null
-              else
-                  curl -s -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" -d "chat_id=$TG_CHAT_ID" -d "text=$input" -d "parse_mode=HTML" -d "disable_web_page_preview=true" > /dev/null
-              fi
-          }
-
-          tg_post "<b>Kernel Build Started</b>
+          /opt/cirrus_env tg_post "<b>Kernel Build Started</b>
           Device: RMX2185
           Job: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
@@ -87,7 +76,7 @@ jobs:
 
           if [ ${PIPESTATUS[0]} -ne 0 ]; then
               echo "==> Error: Build failed!"
-              tg_post "build.txt" "<b>Kernel Build Failed!</b> Log attached."
+              /opt/cirrus_env tg_post "build.txt" "<b>Kernel Build Failed!</b> Log attached."
               exit 1
           fi
 
@@ -99,8 +88,8 @@ jobs:
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
 
           echo "==> Done: Build successful!"
-          tg_post "${zipn}" "<b>Kernel Build Successful!</b>
+          /opt/cirrus_env tg_post "${zipn}" "<b>Kernel Build Successful!</b>
           File: <code>${zipn}</code>"
-          tg_post "$WORKSPACE/kernel/build.txt" "Full Build Log"
+          /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Full Build Log"
           
           ccache -s
