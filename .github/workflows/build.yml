@@ -39,9 +39,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-kernel-ccache-${{ github.run_id }}
+          # Gunakan nama yang stabil untuk 'key'
+          key: kernel-ccache-rmx2185
+          # 'restore-keys' memastikan dia mengambil cache TERBARU dari run sebelumnya
           restore-keys: |
-            ${{ runner.os }}-kernel-ccache-
+            kernel-ccache-rmx2185
+            kernel-ccache-
 
       - name: Setup Toolchains
         run: |
