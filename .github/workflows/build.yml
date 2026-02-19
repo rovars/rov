@@ -39,7 +39,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .ccache
-          key: ccache-rov-kernel
+          # Pakai run_id agar SELALU SAVE di akhir build
+          key: ccache-rov-kernel-${{ github.run_id }}
+          # Tetap ambil data TERBARU dari prefix yang sama
+          restore-keys: |
+            ccache-rov-kernel-
 
       - name: Setup Toolchains
         run: |
