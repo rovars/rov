@@ -39,9 +39,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .ccache
-          key: kernel-ccache-rmx2185-${{ github.run_id }}
-          restore-keys: |
-            kernel-ccache-rmx2185-
+          key: ccache-rov-kernel
 
       - name: Setup Toolchains
         run: |
@@ -55,7 +53,6 @@ jobs:
           Device: RMX2185
           Job: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          # Export Ccache Configurations
           export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache
           export CCACHE_BASEDIR=$GITHUB_WORKSPACE
           export CCACHE_COMPILERCHECK=content
