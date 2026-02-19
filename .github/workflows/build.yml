@@ -85,6 +85,7 @@ jobs:
               /opt/cirrus_env tg_post "build.txt" "<b>Kernel Build Failed!</b> Log attached."
               exit 1
           fi
+          echo "Build Successfull" >> build.txt
           ccache -s
 
       - name: Packaging Result
@@ -92,12 +93,16 @@ jobs:
           echo "==> Packaging Result..."
           cd $WORKSPACE/rom/AnyKernel3
           cp $WORKSPACE/kernel/out/arch/arm64/boot/Image.gz-dtb .
+          
+          # Ambil versi KSU jika ada
           ksu_ver=$(sed -n 's/.*DKSU_VERSION=\([0-9]*\).*/\1/p' $WORKSPACE/kernel/drivers/kernelsu/Makefile | head -n 1)
-          zipn="RMX2185-4.9.190+ksu_${ksu_ver}-$(date +%y%m%d).zip"
+          [ -z "$ksu_ver" ] && ksu_ver="no-ksu"
+          
+          zipn="RMX2185-4.9.190-${ksu_ver}-$(date +%y%m%d).zip"
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
 
           echo "==> Done: Build successful!"
-          # Gunakan path lengkap agar tg_post/curl pasti menemukan file
-          /opt/cirrus_env tg_post "$WORKSPACE/rom/AnyKernel3/${zipn}" "<b>Kernel Build Successful!</b>
+          # Gunakan file di direktori saat ini agar curl tidak error 26
+          /opt/cirrus_env tg_post "${zipn}" "<b>Kernel Build Successful!</b>
           File: <code>${zipn}</code>"
-          /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Full Build Log"
+          /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Build successful log"
