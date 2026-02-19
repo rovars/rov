@@ -39,12 +39,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ccache
-          # Gunakan nama yang stabil untuk 'key'
-          key: kernel-ccache-rmx2185
-          # 'restore-keys' memastikan dia mengambil cache TERBARU dari run sebelumnya
+          # 'key' dibuat unik setiap kali run agar GitHub mau menyimpan (SAVE) data baru di akhir build
+          key: kernel-ccache-rmx2185-${{ github.run_id }}
+          # 'restore-keys' akan mencari cache TERBARU yang berawalan sama (RESTORE)
           restore-keys: |
-            kernel-ccache-rmx2185
-            kernel-ccache-
+            kernel-ccache-rmx2185-
 
       - name: Setup Toolchains
         run: |
