@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/rovars/docker:cirrus
+      options: --user root
 
     env:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
@@ -26,14 +27,6 @@ jobs:
           
           echo "==> Cloning Private Kernel..."
           git clone -q --depth=1 -b lineage-17.1 https://rovars:${GH_TOKEN}@github.com/rovars/kernel_realme_RMX2185 $WORKSPACE/kernel
-
-      - name: Cache Ccache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.ccache
-          key: ${{ runner.os }}-kernel-ccache-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-kernel-ccache-
 
       - name: Setup Toolchains
         run: |
@@ -59,6 +52,7 @@ jobs:
           export KBUILD_BUILD_USER=nobody KBUILD_BUILD_HOST=android-build
           export PATH="$WORKSPACE/clang/bin:$WORKSPACE/gcc64/bin:$WORKSPACE/gcc32/bin:$PATH"
           
+          mkdir -p $CCACHE_DIR
           ccache -M 5G
           ccache -o compression=true
           ccache -s
