@@ -94,7 +94,7 @@ jobs:
           cp $WORKSPACE/kernel/out/arch/arm64/boot/Image.gz-dtb .
           ksu_ver=$(sed -n 's/.*DKSU_VERSION=\([0-9]*\).*/\1/p' $WORKSPACE/kernel/drivers/kernelsu/Makefile | head -n 1)
           [ -z "$ksu_ver" ] && ksu_ver="no-ksu"
-          zipn="RMX2185-4.9.190-${ksu_ver}-$(date +%y%m%d).zip"
+          zipn="RMX2185-4.9.190-KSU-${ksu_ver}-$(date +%y%m%d).zip"
           zip -r9 "${zipn}" . -x ".git*" "README.md" "*placeholder"
           /opt/cirrus_env tg_post "${zipn}"
           /opt/cirrus_env tg_post "$WORKSPACE/kernel/build.txt" "Build successful log"
